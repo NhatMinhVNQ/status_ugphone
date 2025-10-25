@@ -17,13 +17,14 @@
 
   <script>
     const apiURL = "https://cloud.kingdev.site/?api=status";
-    const proxy = "https://api.allorigins.win/raw?url="; // Proxy free hoạt động trên GitHub
+    const proxy = "https://api.codetabs.com/v1/proxy?quest="; // ✅ Proxy ổn nhất trên GitHub Pages
 
     async function loadData() {
       const output = document.getElementById("output");
       output.textContent = "⏳ Đang tải...";
       try {
         const response = await fetch(proxy + encodeURIComponent(apiURL));
+        if (!response.ok) throw new Error("HTTP " + response.status);
         const data = await response.json();
         output.textContent = JSON.stringify(data, null, 2);
       } catch (err) {
