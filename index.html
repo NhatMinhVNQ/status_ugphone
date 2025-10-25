@@ -68,12 +68,13 @@
   <pre id="output">Đang tải...</pre>
 
   <footer>
-    Cập nhật tự động mỗi 60 giây — Nguồn: <a href="https://cloud.kingdev.site/?api=status" target="_blank">cloud.kingdev.site</a>
+    Cập nhật tự động mỗi 60 giây — Nguồn: 
+    <a href="https://cloud.kingdev.site/?api=status" target="_blank">cloud.kingdev.site</a>
   </footer>
 
   <script>
     const API_URL = 'https://cloud.kingdev.site/?api=status';
-    const CORS_PROXY = 'https://corsproxy.io/?key=eeca9d35&url=' + encodeURIComponent(API_URL);
+    const CORS_PROXY = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(API_URL);
 
     async function fetchStatus() {
       const out = document.getElementById('output');
@@ -109,3 +110,8 @@
 
     // Gọi lần đầu và tự làm mới mỗi 60 giây
     fetchStatus();
+    document.getElementById('reload').addEventListener('click', fetchStatus);
+    setInterval(fetchStatus, 60000);
+  </script>
+</body>
+</html>
