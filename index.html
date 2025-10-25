@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KingDev Status Viewer</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #0d1117;
+      color: #c9d1d9;
+      padding: 20px;
+      margin: 0;
+    }
+    pre {
+      background: #161b22;
+      padding: 15px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-x: auto;
+    }
+    button {
+      background: #238636;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background: #2ea043;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 800px;
+      margin-top: 12px;
+    }
+    th, td {
+      padding: 8px 10px;
+      border: 1px solid #222;
+      text-align: left;
+    }
+    .ok {
+      color: #8ee38f;
+      font-weight: 700;
+    }
+    .bad {
+      color: #ff8b8b;
+      font-weight: 700;
+    }
+    footer {
+      font-size: 0.9em;
+      opacity: 0.7;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>🔍 Trạng thái máy chủ KingDev</h2>
+  <button id="reload">🔄 Làm mới</button>
+  <div id="table-wrap"></div>
+
+  <h3>📦 Raw JSON</h3>
+  <pre id="output">Đang tải...</pre>
+
+  <footer>
+    Cập nhật tự động mỗi 60 giây — Nguồn: <a href="https://cloud.kingdev.site/?api=status" target="_blank">cloud.kingdev.site</a>
+  </footer>
+
+  <script>
+    const API_URL = 'https://cloud.kingdev.site/?api=status';
+    const CORS_PROXY = 'https://corsproxy.io/?key=eeca9d35&url=' + encodeURIComponent(API_URL);
+
+    async function fetchStatus() {
+      const out = document.getElementById('output');
+      const tableWrap = document.getElementById('table-wrap');
+      out.textContent = '⏳ Đang tải dữ liệu...';
+      tableWrap.innerHTML = '';
+
+      try {
+        const res = await fetch(CORS_PROXY);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+
+        // Hiển thị JSON thô
+        out.textContent = JSON.stringify(data, null, 2);
+
+        // Nếu có phần "servers", hiển thị bảng
+        if (data.servers && typeof data.servers === 'object') {
+          const rows = Object.entries(data.servers).map(([server, status]) => {
+            const cls = /out of stock/i.test(status) ? 'bad' : 'ok';
+            return `<tr><td>${server}</td><td class="${cls}">${status}</td></tr>`;
+          }).join('');
+          tableWrap.innerHTML = `
+            <table>
+              <thead><tr><th>Máy chủ</th><th>Trạng thái</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>`;
+        }
+
+      } catch (err) {
+        out.textContent = '❌ Lỗi: ' + err.message;
+      }
+    }
+
+    // Gọi lần đầu và tự làm mới mỗi 60 giây
+    fetchStatus();
