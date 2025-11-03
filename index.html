@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Auto Gist — Import LocalStorage</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --muted:#94a3b8;
+      --accent1:#7c3aed;
+      --accent2:#06b6d4;
+      --glass: rgba(255,255,255,0.04);
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:
+        linear-gradient(180deg, rgba(12,14,20,1) 0%, rgba(7,10,16,1) 100%),
+        radial-gradient(600px 400px at 10% 10%, rgba(124,58,237,0.08), transparent 10%),
+        radial-gradient(500px 300px at 90% 90%, rgba(6,182,212,0.05), transparent 10%);
+      color:#e6eef8;
+      padding:28px;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    .wrap{max-width:960px;margin:0 auto;}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    .logo{
+      width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent1),var(--accent2));
+      display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:20px;box-shadow:0 8px 30px rgba(12,14,20,0.6)
+    }
+    h1{margin:0;font-size:20px}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:18px;margin-top:20px}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:var(--radius);
+      padding:16px;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    textarea,input,select{width:100%;background:transparent;border:1px solid rgba(255,255,255,0.04);padding:12px;border-radius:10px;color:inherit;font-size:13px;outline:none}
+    textarea{min-height:220px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+    label.small{display:block;margin-bottom:8px;font-weight:600}
+    .row{display:flex;gap:8px;align-items:center}
+    .btn{
+      display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;border:0;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:white;font-weight:600;cursor:pointer;
+      box-shadow:0 8px 20px rgba(124,58,237,0.12), inset 0 -2px 6px rgba(0,0,0,0.2);
+    }
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);font-weight:600}
+    .small{font-size:12px;color:var(--muted)}
+    .out{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;white-space:pre-wrap;word-break:break-all}
+    .meta{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+    .chip{padding:6px 8px;border-radius:999px;background:var(--glass);font-size:12px;color:var(--muted)}
+    .warn{margin-top:12px;color:#ffb4b4;background:rgba(255,180,180,0.04);padding:10px;border-radius:8px;border:1px solid rgba(255,80,80,0.06)}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .rightcol .out{max-height:360px;overflow:auto}
+    .copybtn{padding:8px 10px;border-radius:8px;border:0;background:rgba(255,255,255,0.03);color:var(--muted);cursor:pointer}
+    .footer{margin-top:18px;color:var(--muted);font-size:12px;text-align:center}
+    @media (max-width:900px){ .grid{grid-template-columns:1fr; } .rightcol{order: -1} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">G</div>
+      <div>
+        <h1>Auto Gist — Import LocalStorage</h1>
+        <p class="lead">Dán JSON localStorage -> tạo Gist secret tự động -> nhận raw & base64 để dùng với <code>fetch(atob('...'))</code></p>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- left -->
+      <div class="card">
+        <div class="meta">
+          <div class="chip">Secret: <strong style="margin-left:6px">ON (unlisted)</strong></div>
+          <div class="small">Token được điền sẵn (ẩn) • Tên file random &amp; gần như không trùng</div>
+        </div>
+
+        <label class="small">LocalStorage JSON (ví dụ bạn đã cung cấp)</label>
+        <textarea id="inputJson">{ "_gcl_ls": { "schema": "gcl", "version": 1, "gcl_ctr": { "value": { "value": 0, "timeouts": 0, "creationTimeMs": 1762040964292 }, "expires": 1769816964292 } }, "UGPHONE-ID": "7367efaf-86a0-6fac-f1f2-86a090baa7b0", "ugBrowserId": "0742f9ecfe480939f8d215d6db7ebedf", "ugPhoneLang": "vi", "UGPHONE-MQTT": { "client_id": 14541639, "login_id": "7367efaf-86a0-6fac-f1f2-86a090baa7b0", "access_token": "c1c0ea5a00a38055e0a3cc1a0b71967f20251102075054", "access_key": "134a58958953b8e4a20a1336ca2d98a", "access_secret": "da134a5834f35e0dbef178637b8e499b", "mqtt_url": "tcp://mqtt.ugphone.com:20001", "mqtt_ssl_url": "ssl://mqtt.ugphone.com:20003", "mqtt_ws_url": "ws://mqtt.ugphone.com:20002/mqtt", "mqtt_wss_url": "wss://mqtt.ugphone.com:8183/mqtt", "mqtt_topic": "game-toc/online/mqtt_client_14541639/2567a5ec9705eb7ac2c984033e06189d", "mqtt_client_id": "mqtt_client_14541639_web", "mqtt_username": "mqtt_client_14541639", "mqtt_password": "8a8bacb5cc5e75755162af64f153f8e9", "ws_url": "wss://www.ugphone.com:2351", "first_login": 1, "is_visitor": 0 }, "UGPHONE-Token": "c1c0ea5a00a38055e0a3cc1a0b71967f20251102075054", "hadAgreePolicy": "true", "hasWalletGuide": "1", "UGrightSlideTips": "0" }</textarea>
+
+        <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
+          <button id="createBtn" class="btn">Tạo Gist (Secret)</button>
+          <button id="previewBtn" class="btn ghost">Xem Preview</button>
+          <button id="resetBtn" class="btn ghost">Reset</button>
+          <div style="flex:1"></div>
+          <div class="small">File name sẽ là <code>uuid_timestamp.js</code></div>
+        </div>
+
+        <div id="preview" class="out" style="display:none;margin-top:12px"></div>
+        <div id="result" class="out" style="display:none;margin-top:12px"></div>
+
+        <div id="warning" class="warn" style="display:none">
+          ⚠️ Cảnh báo: file tạo ra chứa mã sẽ được thực thi nếu bạn dùng `eval`. Chỉ chạy khi bạn hoàn toàn tin tưởng nội dung!
+        </div>
+
+      </div>
+
+      <!-- right -->
+      <div class="card rightcol">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="small">Kết quả</div>
+            <div style="font-weight:700">Raw URL • Base64 • Snippet</div>
+          </div>
+          <div class="small">Tiện ích</div>
+        </div>
+
+        <div id="outputArea" style="margin-top:12px">
+          <div id="outLinks" style="display:none">
+            <div style="margin-bottom:8px">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Gist URL</div>
+              <div id="htmlUrl" class="out"></div>
+            </div>
+
+            <div style="margin-bottom:8px">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Raw file URL</div>
+              <div id="rawUrl" class="out"></div>
+            </div>
+
+            <div style="margin-bottom:8px">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Base64(raw_url)</div>
+              <div id="base64" class="out"></div>
+            </div>
+
+            <div style="margin-bottom:8px">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Fetch snippet</div>
+              <div id="snippet" class="out"></div>
+            </div>
+
+            <div class="actions">
+              <button id="copyHtml" class="copybtn">Copy Gist URL</button>
+              <button id="openHtml" class="copybtn">Open Gist</button>
+              <button id="copyRaw" class="copybtn">Copy Raw URL</button>
+              <button id="openRaw" class="copybtn">Open Raw</button>
+              <button id="copyBase64" class="copybtn">Copy Base64</button>
+              <button id="copySnippet" class="copybtn">Copy Snippet</button>
+            </div>
+          </div>
+
+          <div id="infoEmpty" class="small" style="margin-top:8px">Chưa có gist nào được tạo. Bấm "Tạo Gist" để bắt đầu.</div>
+        </div>
+
+        <div style="margin-top:14px">
+          <div class="small" style="margin-bottom:8px"><strong>Ghi chú:</strong></div>
+          <ul class="small" style="margin:0;padding-left:18px;color:var(--muted)">
+            <li>Gist được tạo bằng GitHub API; token đã được điền sẵn.</li>
+            <li>Gist mặc định là <strong>secret (unlisted)</strong>.</li>
+            <li>Để tránh rủi ro, không bật chế độ tự chạy `eval` tự động — bạn có thể sao chép snippet và chạy thủ công.</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="footer">Designed for you • Cẩn trọng khi dùng token &amp; eval</div>
+  </div>
+
+  <script>
+    // ======================
+    // CONFIG: token mặc định (theo yêu cầu)
+    // ======================
+    const DEFAULT_GH_TOKEN = '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';
+    // secret (unlisted) by default:
+    const DEFAULT_PUBLIC_FLAG = false;
+
+    // ELEMENTS
+    const inputJson = document.getElementById('inputJson');
+    const createBtn = document.getElementById('createBtn');
+    const previewBtn = document.getElementById('previewBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const preview = document.getElementById('preview');
+    const result = document.getElementById('result');
+    const warning = document.getElementById('warning');
+
+    const outLinks = document.getElementById('outLinks');
+    const infoEmpty = document.getElementById('infoEmpty');
+    const htmlUrlEl = document.getElementById('htmlUrl');
+    const rawUrlEl = document.getElementById('rawUrl');
+    const base64El = document.getElementById('base64');
+    const snippetEl = document.getElementById('snippet');
+
+    const copyHtml = document.getElementById('copyHtml');
+    const openHtml = document.getElementById('openHtml');
+    const copyRaw = document.getElementById('copyRaw');
+    const openRaw = document.getElementById('openRaw');
+    const copyBase64 = document.getElementById('copyBase64');
+    const copySnippet = document.getElementById('copySnippet');
+
+    // helpers
+    function uidFilename() {
+      // use crypto.randomUUID if available, else fallback to random + timestamp
+      const id = (crypto && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).slice(2,10) + '-' + Math.floor(Math.random()*1e6).toString(36);
+      return `file_${id}_${Date.now()}.js`;
+    }
+
+    function buildFileContent(parsedObj) {
+      const jsonPretty = JSON.stringify(parsedObj, null, 2);
+      return `// File tự động tạo — chèn localStorage từ JSON\nconst data = ${jsonPretty};\n\nfor (const key in data) {\n  if (Object.prototype.hasOwnProperty.call(data, key)) {\n    localStorage.setItem(key, data[key]);\n  }\n}\n\nconsole.log(\n  `%c🌸 Cảm ơn bạn đã sử dụng code nhập Local Storage! 🌸 \\n%cBây giờ bạn chỉ cần làm mới trang web là được nhé!\\n\\nYouTube: https://www.youtube.com/@nikatahanami\\nDiscord: https://discord.gg/WAQ7WKMB44`,\n  'color: #ff69b4; font-size: 16px; font-weight: bold;',\n  'color: #ff8c00; font-size: 15px; font-weight: bold;'\n);\n`;
+    }
+
+    function showPreview(text) {
+      preview.style.display = 'block';
+      preview.textContent = text;
+    }
+    function hidePreview(){ preview.style.display = 'none'; }
+
+    function showResult(text) {
+      result.style.display = 'block';
+      result.textContent = text;
+    }
+    function hideResult(){ result.style.display = 'none'; }
+
+    function showOutputLinks() {
+      outLinks.style.display = 'block';
+      infoEmpty.style.display = 'none';
+    }
+    function hideOutputLinks(){
+      outLinks.style.display = 'none';
+      infoEmpty.style.display = 'block';
+    }
+
+    function b64EncodeUnicode(str) {
+      // not used for file content, but safe helper if needed
+      return btoa(unescape(encodeURIComponent(str)));
+    }
+
+    // event handlers
+    previewBtn.addEventListener('click', () => {
+      try {
+        const parsed = JSON.parse(inputJson.value);
+        const content = buildFileContent(parsed);
+        showPreview("=== Preview file content ===\n\n" + content);
+      } catch (e) {
+        showPreview('Lỗi: JSON không hợp lệ — ' + e.message);
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      inputJson.value = '';
+      hidePreview();
+      hideResult();
+      hideOutputLinks();
+      warning.style.display = 'none';
+    });
+
+    createBtn.addEventListener('click', async () => {
+      hidePreview();
+      hideResult();
+      hideOutputLinks();
+      warning.style.display = 'none';
+
+      // parse JSON
+      let parsed;
+      try {
+        parsed = JSON.parse(inputJson.value);
+      } catch (e) {
+        showResult('⚠️ JSON không hợp lệ: ' + e.message);
+        return;
+      }
+
+      // prepare file
+      const filename = uidFilename();
+      const content = buildFileContent(parsed);
+      const payload = {
+        description: `auto gist created ${new Date().toISOString()}`,
+        public: DEFAULT_PUBLIC_FLAG,
+        files: {}
+      };
+      payload.files[filename] = { content };
+
+      showResult('Đang tạo gist, vui lòng chờ...');
+
+      try {
+        const headers = {
+          'Accept': 'application/vnd.github+json',
+          'Authorization': 'token ' + DEFAULT_GH_TOKEN
+        };
+
+        const resp = await fetch('https://api.github.com/gists', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload)
+        });
+
+        if (!resp.ok) {
+          const txt = await resp.text();
+          showResult(`Tạo gist thất bại — status ${resp.status} ${resp.statusText}\nChi tiết: ${txt}`);
+          return;
+        }
+
+        const data = await resp.json();
+        const createdFile = data.files && data.files[filename];
+        if (!createdFile || !createdFile.raw_url) {
+          showResult('Gist tạo thành công nhưng không lấy được raw_url từ phản hồi. Phản hồi: ' + JSON.stringify(data));
+          return;
+        }
+
+        const htmlUrl = data.html_url || '';
+        const rawUrl = createdFile.raw_url;
+        const base64Raw = btoa(rawUrl);
+        const fetchSnippet = `fetch(atob('${base64Raw}')).then(r => r.text().then(eval));`;
+
+        htmlUrlEl.textContent = htmlUrl;
+        rawUrlEl.textContent = rawUrl;
+        base64El.textContent = base64Raw;
+        snippetEl.textContent = fetchSnippet;
+
+        showResult('✅ Gist tạo thành công!');
+        warning.style.display = 'block';
+        showOutputLinks();
+
+        // wire copy/open buttons
+        copyHtml.onclick = () => navigator.clipboard.writeText(htmlUrl).then(()=>copyHtml.textContent='Copied');
+        openHtml.onclick = () => window.open(htmlUrl, '_blank');
+        copyRaw.onclick = () => navigator.clipboard.writeText(rawUrl).then(()=>copyRaw.textContent='Copied');
+        openRaw.onclick = () => window.open(rawUrl, '_blank');
+        copyBase64.onclick = () => navigator.clipboard.writeText(base64Raw).then(()=>copyBase64.textContent='Copied');
+        copySnippet.onclick = () => navigator.clipboard.writeText(fetchSnippet).then(()=>copySnippet.textContent='Copied');
+
+      } catch (err) {
+        showResult('Lỗi khi gọi API: ' + err.message + '. Kiểm tra kết nối / token.');
+      }
+    });
+
+    // initial state
+    hidePreview();
+    hideResult();
+    hideOutputLinks();
+    warning.style.display = 'none';
+
+    // (optional) If you ever want to auto-create on load, uncomment:
+    // window.addEventListener('load', () => createBtn.click());
+  </script>
+</body>
+</html>
